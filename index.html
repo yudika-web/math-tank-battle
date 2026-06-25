@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Math Tank Battle - Ultimate Edition</title>
+    <title>Math Tank Battle - 100 Questions Edition</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
@@ -24,7 +24,7 @@
         .ui-box { 
             background: #1a1a24; padding: 12px 16px; border: 3px solid #45455b; 
             box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff; 
-            font-size: 10px; line-height: 1.6; min-width: 180px;
+            font-size: 10px; line-height: 1.6; min-width: 180px; text-shadow: 1px 1px #000;
         }
 
         #game-wrapper { position: relative; width: 800px; height: 600px; max-width: 100vw; max-height: 100vh; }
@@ -35,16 +35,15 @@
             image-rendering: pixelated; box-shadow: 0 0 25px rgba(0,0,0,0.7);
         }
 
-        /* Pop-up Modals */
         .modal {
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #1a1a24; border: 4px solid #f1c40f; padding: 25px; text-align: center;
-            box-shadow: 0 0 0 4px #000, 0 10px 20px rgba(0,0,0,0.5); z-index: 100; width: 85%; max-width: 440px;
+            box-shadow: 0 0 0 4px #000, 0 10px 30px rgba(0,0,0,0.8); z-index: 100; width: 85%; max-width: 440px;
         }
-        .modal h3 { color: #f1c40f; margin-top: 0; font-size: 11px; letter-spacing: 1px; }
+        .modal h3 { color: #f1c40f; margin-top: 0; font-size: 11px; letter-spacing: 1px; line-height: 1.6; }
         
         #math-ans { 
-            font-family: 'Press Start 2P', monospace; width: 70%; padding: 12px; 
+            font-family: 'Press Start 2P', monospace; width: 60%; padding: 12px; 
             margin: 15px 0; font-size: 16px; text-align: center; border: 4px solid #45455b; background: #000; color: #fff;
             outline: none;
         }
@@ -56,15 +55,15 @@
         }
         button:active { transform: scale(0.95); }
 
-        /* Luck Cards System Styles */
-        #cards-container { display: flex; justify-content: space-around; margin-top: 20px; }
+        #cards-container { display: flex; justify-content: space-around; margin-top: 20px; gap: 15px; }
         .luck-card {
-            width: 90px; height: 130px; background: #2c3e50; border: 3px solid #bdc3c7;
-            box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff, 0 4px 8px rgba(0,0,0,0.5);
+            width: 100px; height: 140px; background: #2c3e50; border: 4px solid #bdc3c7;
+            box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff, 0 6px 12px rgba(0,0,0,0.6);
             cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            font-size: 8px; font-weight: bold; padding: 5px; text-align: center; color: #fff;
+            font-size: 28px; font-weight: bold; color: #f1c40f; text-shadow: 2px 2px #000;
+            transition: transform 0.1s, border-color 0.1s;
         }
-        .luck-card:hover { border-color: #f1c40f; transform: translateY(-5px); background: #34495e; }
+        .luck-card:hover { border-color: #2ecc71; transform: translateY(-8px); background: #34495e; }
 
         #controls { display: none; position: absolute; bottom: 20px; left: 20px; right: 20px; pointer-events: none; }
         .joy-zone { pointer-events: auto; width: 110px; height: 110px; background: rgba(0,0,0,0.4); border: 4px solid #45455b; border-radius: 50%; position: relative; }
@@ -91,7 +90,7 @@
 
     <div id="dashboard">
         <div class="ui-box">STAGE: <span id="stage-text">1</span><br>NYAWA: <span id="lives-text">3</span></div>
-        <div class="ui-box" id="boss-announce" style="color: #ff3333; display:none; text-align:center;">! AWAS BOSS !</div>
+        <div class="ui-box" id="boss-announce" style="color: #ff3333; display:none; text-align:center;">!!! BOSS BATTLE !!!</div>
         <div class="ui-box" style="color: #f1c40f; text-align: right;">BUFF AKTIF:<br><span id="buff-status">TIDAK ADA</span></div>
     </div>
 
@@ -99,25 +98,108 @@
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         
         <div id="math-popup" class="modal">
-            <h3>[ TANTANGAN MATEMATIKA ]</h3>
-            <div id="math-q" style="margin-top: 15px; font-size: 11px; line-height: 1.6;">5 + 5 = ?</div>
-            <input type="number" id="math-ans" autocomplete="off" pattern="[0-9]*">
+            <h3>[ MERETAS KOTAK BUFF ]</h3>
+            <div id="math-q" style="margin-top: 15px; font-size: 12px; line-height: 1.8; color: #fff;">5 + 5 = ?</div>
+            <input type="number" id="math-ans" autocomplete="off" pattern="[0-9.-]*">
             <br>
-            <button onclick="submitMath()">SUBMIT</button>
+            <button onclick="submitMath()">KIRIM JAWABAN</button>
         </div>
 
-        <div id="luck-popup" class="modal" style="border-color: #2ecc71; max-width: 480px;">
+        <div id="luck-popup" class="modal" style="border-color: #2ecc71; max-width: 500px;">
             <h3 style="color: #2ecc71;">[ STAGE CLEAR! ]</h3>
-            <p style="font-size: 9px; margin-top: 10px;">Pilih 1 Kartu Keberuntungan Untuk Stage Berikutnya:</p>
+            <p style="font-size: 9px; margin-top: 10px; color: #bdc3c7;">Pilih 1 Kartu Misterius Untuk Stage Berikutnya:</p>
             <div id="cards-container">
                 <div class="luck-card" onclick="pickLuckCard(0)"><span id="c0-txt">?</span></div>
                 <div class="luck-card" onclick="pickLuckCard(1)"><span id="c1-txt">?</span></div>
                 <div class="luck-card" onclick="pickLuckCard(2)"><span id="c2-txt">?</span></div>
             </div>
         </div>
+
+        <div id="controls">
+            <div id="joy-left-zone" class="joy-zone"><div id="joy-left-stick" class="joy-stick"></div></div>
+            <div id="joy-right-zone" class="joy-zone"><div id="joy-right-stick" class="joy-stick" style="background:#3498db; border-color:#2980b9;"></div></div>
+        </div>
     </div>
 
 <script>
+// ==========================================
+// 1. DATABASE 100 SOAL MATEMATIKA ACAK
+// ==========================================
+const mathDatabase = [
+    // Aritmatika Dasar
+    {q: "15 + 28 = ?", a: "43"}, {q: "100 - 35 = ?", a: "65"}, {q: "12 x 12 = ?", a: "144"}, {q: "144 / 12 = ?", a: "12"},
+    {q: "8 x 7 = ?", a: "56"}, {q: "9 x 9 = ?", a: "81"}, {q: "64 / 8 = ?", a: "8"}, {q: "120 + 85 = ?", a: "205"},
+    {q: "300 - 125 = ?", a: "175"}, {q: "25 x 4 = ?", a: "100"}, {q: "15 x 6 = ?", a: "90"}, {q: "50 / 2 = ?", a: "25"},
+    {q: "7 x 6 = ?", a: "42"}, {q: "8 x 9 = ?", a: "72"}, {q: "11 x 11 = ?", a: "121"}, {q: "13 x 3 = ?", a: "39"},
+    {q: "1000 - 450 = ?", a: "550"}, {q: "250 + 350 = ?", a: "600"}, {q: "81 / 9 = ?", a: "9"}, {q: "45 / 5 = ?", a: "9"},
+    {q: "2^3 (Dua pangkat tiga) = ?", a: "8"}, {q: "3^2 (Tiga pangkat dua) = ?", a: "9"}, {q: "10^2 = ?", a: "100"}, {q: "Akar dari 64 = ?", a: "8"},
+    {q: "Akar dari 100 = ?", a: "10"}, {q: "4^3 (Empat pangkat tiga) = ?", a: "64"},
+
+    // Pecahan & Desimal
+    {q: "1/2 + 1/4 = ? (Desimal, misal 0.75)", a: "0.75"}, {q: "3/4 = ? (Desimal)", a: "0.75"}, {q: "1/5 = ? (Desimal)", a: "0.2"},
+    {q: "2/5 = ? (Desimal)", a: "0.4"}, {q: "1/2 = ? (Desimal)", a: "0.5"}, {q: "Desimal dari 1/8 adalah 0.1...", a: "0.125"},
+    {q: "0.5 + 0.5 = ?", a: "1"}, {q: "1.5 x 2 = ?", a: "3"}, {q: "2.5 + 2.5 = ?", a: "5"}, {q: "10 x 0.5 = ?", a: "5"},
+
+    // Geometri Dasar (Bangun Datar)
+    {q: "Luas persegi dengan sisi 5 cm?", a: "25"}, {q: "Keliling persegi panjang, panjang 10, lebar 5?", a: "30"},
+    {q: "Luas persegi panjang, panjang 8, lebar 4?", a: "32"}, {q: "Keliling persegi sisi 7 cm?", a: "28"},
+    {q: "Luas segitiga, alas 10, tinggi 8?", a: "40"}, {q: "Luas segitiga, alas 6, tinggi 4?", a: "12"},
+    {q: "Sisi miring segitiga siku (Phytagoras), alas 3, tinggi 4?", a: "5"}, {q: "Sisi miring siku-siku, alas 6, tinggi 8?", a: "10"},
+    {q: "Luas lingkaran jika (pi x r^2), r = 10, pi = 3.14?", a: "314"}, {q: "Keliling persegi sisi 12?", a: "48"},
+    {q: "Luas jajar genjang alas 10 tinggi 5?", a: "50"}, {q: "Luas belah ketupat d1=6, d2=8?", a: "24"},
+    {q: "Luas trapesium siku, sisi sejajar 10 dan 14, tinggi 5?", a: "60"}, {q: "Sebuah persegi luasnya 81, berapa sisinya?", a: "9"},
+    {q: "Luas persegi sisi 11?", a: "121"},
+
+    // Geometri Ruang (SMP Kelas 7/8)
+    {q: "Volume kubus sisi 3 cm?", a: "27"}, {q: "Volume kubus sisi 4 cm?", a: "64"}, {q: "Volume kubus sisi 5 cm?", a: "125"},
+    {q: "Volume balok p=10, l=5, t=2?", a: "100"}, {q: "Volume balok p=4, l=3, t=5?", a: "60"},
+    {q: "Luas permukaan kubus sisi 2 cm?", a: "24"}, {q: "Luas permukaan kubus sisi 3 cm?", a: "54"},
+    {q: "Volume prisma segitiga luas alas 10, tinggi prisma 8?", a: "80"}, {q: "Volume tabung jika luas alas 50, tinggi 10?", a: "500"},
+    {q: "Sebuah kubus volumenya 1000, berapa sisinya?", a: "10"}, {q: "Volume limas segiempat luas alas 30, tinggi 10? (1/3 x La x t)", a: "100"},
+    {q: "Volume balok p=5, l=2, t=10?", a: "100"}, {q: "Jumlah rusuk pada kubus adalah?", a: "12"},
+    {q: "Jumlah titik sudut pada balok?", a: "8"}, {q: "Jumlah sisi pada kubus adalah?", a: "6"},
+
+    // Fisika, Kinematika, & Konversi Satuan (SMP)
+    {q: "5 Kilometer = ... Meter?", a: "5000"}, {q: "2 Jam = ... Menit?", a: "120"}, {q: "1 Jam = ... Detik?", a: "3600"},
+    {q: "Jika v = 10 m/s dan t = 5 s. Jarak (GLB) = ... m?", a: "50"}, {q: "Kecepatan mobil melaju 100 meter dalam 5 detik? (m/s)", a: "20"},
+    {q: "36 km/jam = ... m/s?", a: "10"}, {q: "72 km/jam = ... m/s?", a: "20"}, {q: "Massa 5 kg = ... gram?", a: "5000"},
+    {q: "Massa jenis (Rho) = m/v. Massa 1000 kg, volume 2 m3. Rho = ?", a: "500"}, {q: "1 Ton = ... Kg?", a: "1000"},
+    {q: "Gaya (F) = m.a. Jika m = 10 kg, a = 2 m/s2, F = ... Newton?", a: "20"}, {q: "Usaha (W) = F.s. Jika F = 50 N, s = 2 m, W = ... Joule?", a: "100"},
+    {q: "500 Centimeter = ... Meter?", a: "5"}, {q: "3000 Mililiter = ... Liter?", a: "3"}, {q: "1/2 Jam = ... Menit?", a: "30"},
+    {q: "Suhu air mendidih dalam Celcius?", a: "100"}, {q: "1 Menit 30 Detik = ... Detik?", a: "90"},
+    {q: "Jarak 15 km ditempuh dalam 3 jam. Kecepatannya ... km/jam?", a: "5"}, {q: "Percepatan bumi membulat (g) = ... m/s2?", a: "10"},
+    {q: "2.5 Kg = ... Gram?", a: "2500"}, {q: "1 Kuintal = ... Kg?", a: "100"},
+
+    // Operasi Campuran
+    {q: "5 + 3 x 2 = ? (Kerjakan kali dulu)", a: "11"}, {q: "10 - 4 / 2 = ?", a: "8"}, {q: "20 + 10 x 3 = ?", a: "50"},
+    {q: "(15 + 5) x 2 = ?", a: "40"}, {q: "100 / (10 + 10) = ?", a: "5"}, {q: "12 x 2 - 4 = ?", a: "20"},
+    {q: "8 x 8 + 6 = ?", a: "70"}, {q: "(20 - 5) x 4 = ?", a: "60"}, {q: "50 / 5 + 10 = ?", a: "20"},
+    {q: "2 x 3 x 4 = ?", a: "24"}, {q: "1 + 2 + 3 + 4 + 5 = ?", a: "15"}, {q: "3 x (4 + 6) = ?", a: "30"},
+    {q: "40 / 8 x 2 = ?", a: "10"}
+];
+
+let questionPool = []; // Penampung antrian soal yang sudah diacak
+
+function initQuestions() {
+    questionPool = [...mathDatabase];
+    // Fisher-Yates Shuffle
+    for (let i = questionPool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [questionPool[i], questionPool[j]] = [questionPool[j], questionPool[i]];
+    }
+}
+
+// Menarik 1 soal acak yang tidak berulang
+function generateMath() {
+    if (questionPool.length === 0) {
+        initQuestions(); // Isi & acak ulang jika sudah habis 100 soal
+    }
+    return questionPool.pop(); // Tarik dan hilangkan soal dari antrian
+}
+
+// ==========================================
+// 2. INISIALISASI DASAR
+// ==========================================
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const uiStage = document.getElementById('stage-text');
@@ -125,7 +207,41 @@ const uiLives = document.getElementById('lives-text');
 const uiBuff = document.getElementById('buff-status');
 const bossAnnounce = document.getElementById('boss-announce');
 
-// --- RETRO AUDIO SINTESIS ---
+const themes = [
+    { bg: "#111625", wall: "#22314d", stroke: "#00ffff" }, 
+    { bg: "#230303", wall: "#4a0e0e", stroke: "#ff5500" }, 
+    { bg: "#3a2307", wall: "#6e420f", stroke: "#ffcc00" }, 
+    { bg: "#1f2d3d", wall: "#3b526d", stroke: "#70a1ff" }, 
+    { bg: "#0d2012", wall: "#1b3d24", stroke: "#2ecc71" }  
+];
+
+const buffList = ['Shotgun', 'Laser', 'Kebal', 'Gerak Cepat', 'Freeze AI', 'Extra Life', 'Full HP', 'Bomb'];
+
+let player; 
+let enemies = [];
+let bullets = [];
+let buffBoxes = [];
+let walls = [];
+let particles = []; 
+let confetti = []; 
+
+let currentStage = 1;
+let currentTheme = themes[0];
+let gameActive = false; 
+let isGameFinished = false;
+const keys = {};
+
+let expectedMathAnswer = "";
+let pendingBuffBoxIndex = -1;
+let pendingBuffType = "";
+let currentStageCardPool = [];
+
+let joyL = { x: 0, y: 0, active: false };
+let joyR = { x: 0, y: 0, active: false };
+
+// ==========================================
+// 3. AUDIO & CONTROLS
+// ==========================================
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playSound(type) {
     if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -153,39 +269,6 @@ function playSound(type) {
     }
 }
 
-// --- CONFIG THEME ARENA ---
-const themes = [
-    { bg: "#111625", wall: "#22314d", stroke: "#00ffff" }, 
-    { bg: "#230303", wall: "#4a0e0e", stroke: "#ff5500" }, 
-    { bg: "#3a2307", wall: "#6e420f", stroke: "#ffcc00" }, 
-    { bg: "#1f2d3d", wall: "#3b526d", stroke: "#70a1ff" }, 
-    { bg: "#0d2012", wall: "#1b3d24", stroke: "#2ecc71" }  
-];
-
-// List Buff Termasuk Bomb [BM] Baru
-const buffList = ['Shotgun', 'Laser', 'Kebal', 'Gerak Cepat', 'Freeze AI', 'Extra Life', 'Full HP', 'Bomb'];
-
-let currentStage = 1;
-let currentTheme = themes[0];
-let walls = [];
-let gameActive = true;
-let isGameFinished = false; // Flag untuk tamat
-const keys = {};
-
-let expectedMathAnswer = "";
-let pendingBuffBoxIndex = -1;
-let pendingBuffType = "";
-let currentStageCardPool = [];
-
-let joyL = { x: 0, y: 0, active: false };
-let joyR = { x: 0, y: 0, active: false };
-let particles = []; 
-let confetti = []; // Partikel selebrasi kemenangan
-let bullets = [];
-let buffBoxes = [];
-let enemies = [];
-
-// --- INPUT HANDLING ---
 window.addEventListener('keydown', (e) => { 
     if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) e.preventDefault();
     keys[e.code] = true; 
@@ -196,7 +279,7 @@ if('ontouchstart' in window || navigator.maxTouchPoints > 0) {
     document.getElementById('controls').style.display = 'flex';
     document.getElementById('controls').style.justifyContent = 'space-between';
     
-    function handleJoystick(e, joyState, stickEl, isRight) {
+    function handleJoystick(e, joyState, stickEl) {
         e.preventDefault();
         const rect = stickEl.parentElement.getBoundingClientRect();
         const touch = e.targetTouches[0];
@@ -212,25 +295,26 @@ if('ontouchstart' in window || navigator.maxTouchPoints > 0) {
     }
     const leftZone = document.getElementById('joy-left-zone'), rightZone = document.getElementById('joy-right-zone');
     const leftStick = document.getElementById('joy-left-stick'), rightStick = document.getElementById('joy-right-stick');
-    leftZone.addEventListener('touchstart', (e) => handleJoystick(e, joyL, leftStick, false), {passive: false});
-    leftZone.addEventListener('touchmove', (e) => handleJoystick(e, joyL, leftStick, false), {passive: false});
-    leftZone.addEventListener('touchend', (e) => handleJoystick(e, joyL, leftStick, false));
-    rightZone.addEventListener('touchstart', (e) => handleJoystick(e, joyR, rightStick, true), {passive: false});
-    rightZone.addEventListener('touchmove', (e) => handleJoystick(e, joyR, rightStick, true), {passive: false});
-    rightZone.addEventListener('touchend', (e) => handleJoystick(e, joyR, rightStick, true));
+    leftZone.addEventListener('touchstart', (e) => handleJoystick(e, joyL, leftStick), {passive: false});
+    leftZone.addEventListener('touchmove', (e) => handleJoystick(e, joyL, leftStick), {passive: false});
+    leftZone.addEventListener('touchend', (e) => handleJoystick(e, joyL, leftStick));
+    rightZone.addEventListener('touchstart', (e) => handleJoystick(e, joyR, rightStick), {passive: false});
+    rightZone.addEventListener('touchmove', (e) => handleJoystick(e, joyR, rightStick), {passive: false});
+    rightZone.addEventListener('touchend', (e) => handleJoystick(e, joyR, rightStick));
 }
 
+// ==========================================
+// 4. FUNGSI UTILITAS & GENERATOR ARENA
+// ==========================================
 function rectIntersect(x1, y1, w1, h1, x2, y2, w2, h2) {
     return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2;
 }
 
-// --- GENERATOR MAZE (Skarang termasuk rintangan pilar di Stage Boss) ---
 function generateProceduralMaze() {
     walls = [];
     if(currentStage % 5 === 0) {
-        // Rintangan Khusus Stage Boss (2 Pilar Pelindung di tengah kanan-kiri)
-        walls.push({x: 240, y: 200, w: 60, h: 200});
-        walls.push({x: 500, y: 200, w: 60, h: 200});
+        walls.push({x: 220, y: 200, w: 60, h: 200});
+        walls.push({x: 520, y: 200, w: 60, h: 200});
         return;
     }
     let seed = currentStage * 7;
@@ -246,7 +330,9 @@ function generateProceduralMaze() {
 
 function getSafePosition(entitySize) {
     let x, y, isSafe = false;
-    while (!isSafe) {
+    let attempts = 0; 
+    
+    while (!isSafe && attempts < 100) {
         x = Math.floor(Math.random() * (canvas.width - entitySize - 100)) + 50;
         y = Math.floor(Math.random() * (canvas.height - entitySize - 100)) + 50;
         isSafe = true;
@@ -254,7 +340,10 @@ function getSafePosition(entitySize) {
             if (rectIntersect(x - 15, y - 15, entitySize + 30, entitySize + 30, w.x, w.y, w.w, w.h)) { isSafe = false; break; }
         }
         if (rectIntersect(x, y, entitySize, entitySize, 20, 20, 150, 150)) isSafe = false;
+        attempts++;
     }
+    
+    if(!isSafe) { x = canvas.width/2; y = canvas.height/2; }
     return { x, y };
 }
 
@@ -267,28 +356,25 @@ function createExplosion(x, y, color) {
     }
 }
 
-// --- SELEBRASI CONFETTI POP-UP ---
 function triggerConfetti() {
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 150; i++) {
         confetti.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * -canvas.height,
-            vx: (Math.random() - 0.5) * 3,
-            vy: Math.random() * 3 + 2,
-            size: Math.random() * 6 + 4,
-            color: `hsl(${Math.random() * 360}, 100%, 50%)`
+            x: Math.random() * canvas.width, y: Math.random() * -canvas.height,
+            vx: (Math.random() - 0.5) * 4, vy: Math.random() * 3 + 2,
+            size: Math.random() * 6 + 4, color: `hsl(${Math.random() * 360}, 100%, 50%)`
         });
     }
 }
 
-// --- ENTITAS TANK ---
+// ==========================================
+// 5. KELAS TANK
+// ==========================================
 class Tank {
     constructor(x, y, color, isPlayer = false, isBoss = false, bossType = 0) {
-        this.x = x; this.y = y; this.color = color; this.isPlayer = isPlayer;
-        this.isBoss = isBoss; this.bossType = bossType;
+        this.x = x; this.y = y; this.color = color; 
+        this.isPlayer = isPlayer; this.isBoss = isBoss; this.bossType = bossType;
         
-        // REVISI: Ukuran musuh biasa disamakan dengan pemain (28 pixel)
-        this.size = isPlayer ? 28 : (isBoss ? 56 : 28);
+        this.size = isBoss ? 56 : 28;
         this.speed = isPlayer ? 2.6 : (isBoss ? (bossType === 2 ? 2.2 : 1.0) : 1.3);
         this.maxHp = isPlayer ? 100 : (isBoss ? 350 + (currentStage * 15) : 50);
         this.hp = this.maxHp;
@@ -312,6 +398,17 @@ class Tank {
         ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = this.isBoss ? 10 : 5;
         ctx.beginPath(); ctx.moveTo(this.x + this.size/2, this.y + this.size/2);
         ctx.lineTo(this.x + this.size/2 + (this.aimX * (this.size*0.8)), this.y + this.size/2 + (this.aimY * (this.size*0.8))); ctx.stroke();
+
+        ctx.fillStyle = '#222';
+        if(Math.abs(this.aimX) > Math.abs(this.aimY)) {
+            ctx.fillRect(this.x, this.y - 4, this.size, 5); 
+            ctx.fillRect(this.x, this.y + this.size - 1, this.size, 5);
+        } else {
+            ctx.fillRect(this.x - 4, this.y, 5, this.size); 
+            ctx.fillRect(this.x + this.size - 1, this.y, 5, this.size);
+        }
+
+        ctx.fillStyle = '#2c3e50'; ctx.fillRect(this.x + 6, this.y + 6, this.size - 12, this.size - 12);
 
         if(this.buff === 'Kebal' || this.isBossShielded) {
             ctx.strokeStyle = '#f1c40f'; ctx.lineWidth = 3;
@@ -347,7 +444,8 @@ class Tank {
 
             let joyFired = joyR.active && (Math.abs(joyR.x) > 0.7 || Math.abs(joyR.y) > 0.7);
             if ((keys['Space'] || joyFired) && this.cooldown <= 0) {
-                shoot(this); playSound('shoot'); this.cooldown = (this.buff === 'Laser') ? 10 : 25;
+                shoot(this); playSound('shoot'); 
+                this.cooldown = (this.buff === 'Laser') ? 4 : 25;
             }
         } else {
             let dx = player.x - this.x; let dy = player.y - this.y;
@@ -378,14 +476,17 @@ class Tank {
     }
 }
 
+// ==========================================
+// 6. INSTANSIASI GLOBAL PLAYER & GAMEPLAY
+// ==========================================
+player = new Tank(50, 50, '#3498db', true);
+
 function loadStage(stageNum) {
     if(stageNum > 35) { 
-        isGameFinished = true;
-        gameActive = false;
-        triggerConfetti();
-        alert("LUAR BIASA! KAMU SELESAI MENAMATKAN SELURUH PERMAINAN!"); 
-        return; 
+        isGameFinished = true; gameActive = false; triggerConfetti();
+        alert("PRESTASI LUAR BIASA! KAMU SELESAI MENAMATKAN SELURUH 35 STAGE MATEMATIKA!"); return; 
     }
+    
     currentStage = stageNum;
     currentTheme = themes[(stageNum - 1) % themes.length];
     
@@ -399,7 +500,7 @@ function loadStage(stageNum) {
     if(currentStage % 5 === 0) {
         bossAnnounce.style.display = 'block';
         let bossType = currentStage / 5; 
-        enemies.push(new Tank(600, 400, '#8e44ad', false, true, bossType)); 
+        enemies.push(new Tank(650, 250, '#8e44ad', false, true, bossType)); 
     } else {
         bossAnnounce.style.display = 'none';
         let enemyCount = Math.min(1 + (currentStage % 3), 3);
@@ -415,11 +516,15 @@ function loadStage(stageNum) {
         let rBuff = buffList[Math.floor(Math.random() * buffList.length)];
         buffBoxes.push({x: c.x, y: c.y, size: 22, type: rBuff});
     }
+    
+    gameActive = true;
 }
 
 function shoot(tank) {
     let speed = 6.5; let bX = tank.x + tank.size/2; let bY = tank.y + tank.size/2;
-    if(tank.buff === 'Shotgun') {
+    if(tank.buff === 'Laser') {
+        bullets.push({x: bX, y: bY, vx: tank.aimX * 13, vy: tank.aimY * 13, owner: tank, isLaserBolt: true});
+    } else if(tank.buff === 'Shotgun') {
         bullets.push({x: bX, y: bY, vx: tank.aimX*speed + tank.aimY*2, vy: tank.aimY*speed + tank.aimX*2, owner: tank});
         bullets.push({x: bX, y: bY, vx: tank.aimX*speed, vy: tank.aimY*speed, owner: tank});
         bullets.push({x: bX, y: bY, vx: tank.aimX*speed - tank.aimY*2, vy: tank.aimY*speed - tank.aimX*2, owner: tank});
@@ -451,20 +556,11 @@ function shootLaserBeam(boss) {
     }
 }
 
-// --- SOAL MATEMATIKA SD-SMP ---
-function generateMath() {
-    let type = Math.floor(Math.random() * 5);
-    if(type === 0) { let a = Math.floor(Math.random()*50)+10, b = Math.floor(Math.random()*50)+10; return {q:`${a} + ${b} = ?`, a:a+b}; }
-    if(type === 1) { let a = Math.floor(Math.random()*9)+4, b = Math.floor(Math.random()*11)+3; return {q:`${a} x ${b} = ?`, a:a*b}; }
-    if(type === 2) { let r = Math.floor(Math.random()*7)+3; return {q:`LUAS PERSEGI DENGAN\nSISI = ${r} CM?`, a:r*r}; }
-    if(type === 3) { let m = Math.floor(Math.random()*12)+2; return {q:`${m} METER = ... CENTIMETER?`, a:m*100}; }
-    let p = Math.floor(Math.random()*3)+1; return {q:`DESIMAL FRAKSI DARI ${p}/5 = ?\n(Gunakan Titik, cth: 0.4)`, a:(p/5).toString()};
-}
-
 function triggerMathPopup(boxIndex) {
     gameActive = false; pendingBuffBoxIndex = boxIndex; pendingBuffType = buffBoxes[boxIndex].type;
-    let prob = generateMath(); expectedMathAnswer = prob.a.toString();
-    document.getElementById('math-q').innerText = `BUFF TARGET: [${pendingBuffType.toUpperCase()}]\n\n` + prob.q;
+    let prob = generateMath(); // Menarik soal unik
+    expectedMathAnswer = prob.a.toString();
+    document.getElementById('math-q').innerText = `TARGET BUFF: [${pendingBuffType.toUpperCase()}]\n\n${prob.q}`;
     document.getElementById('math-ans').value = ""; document.getElementById('math-popup').style.display = 'block'; document.getElementById('math-ans').focus();
     joyL.active = false; joyR.active = false;
 }
@@ -475,20 +571,19 @@ function executeBuffEffect(type) {
     } else if(type === 'Full HP') { 
         player.hp = player.maxHp; 
     } else if(type === 'Bomb') {
-        // REVISI: Efek BUFF BOMB baru
         playSound('hit');
         for(let j = enemies.length - 1; j >= 0; j--) {
             let e = enemies[j];
             if(e.isBoss) {
-                e.hp -= (e.maxHp / 2); // Kurangi Setengah Bar HP Boss
+                e.hp -= (e.maxHp / 2); 
                 createExplosion(e.x + e.size/2, e.y + e.size/2, '#ff3333');
                 if(e.hp <= 0) enemies.splice(j, 1);
             } else {
                 createExplosion(e.x + e.size/2, e.y + e.size/2, '#ff5500');
-                enemies.splice(j, 1); // Meledakkan seluruh musuh biasa
+                enemies.splice(j, 1); 
             }
         }
-        if(enemies.length === 0) { triggerStageClear(); }
+        if(enemies.length === 0) { setTimeout(() => triggerStageClear(), 500); }
     } else {
         player.buff = type; player.buffTimer = 550; uiBuff.innerText = type.toUpperCase();
         if(type === 'Freeze AI') { enemies.forEach(e => e.frozen = true); setTimeout(()=>enemies.forEach(e => e.frozen=false), 5000); }
@@ -498,8 +593,7 @@ function executeBuffEffect(type) {
 window.submitMath = function() {
     let ans = document.getElementById('math-ans').value.trim();
     if(ans === expectedMathAnswer) {
-        playSound('buff');
-        executeBuffEffect(pendingBuffType);
+        playSound('buff'); executeBuffEffect(pendingBuffType);
     } else { playSound('wrong'); alert(`SALAH! JAWABAN BENAR: ${expectedMathAnswer}`); }
     
     document.getElementById('math-popup').style.display = 'none';
@@ -507,40 +601,36 @@ window.submitMath = function() {
     pendingBuffBoxIndex = -1; gameActive = true;
     
     setTimeout(() => { 
-        if(buffBoxes.length < 3 && gameActive) {
+        if(buffBoxes.length < 3 && gameActive && enemies.length > 0) {
             let c = getSafePosition(22); let rBuff = buffList[Math.floor(Math.random() * buffList.length)];
             buffBoxes.push({x: c.x, y: c.y, size: 22, type: rBuff}); 
         }
     }, 8000);
 }
 
-// --- SISTEM KARTU LUCK (KEBERUNTUNGAN) ---
 function triggerStageClear() {
-    gameActive = false;
-    triggerConfetti(); // Pop-up Confetti kemenangan stage
+    gameActive = false; triggerConfetti(); 
     
-    // Siapkan 3 Kartu Keberuntungan Acak
     currentStageCardPool = [];
     const pool = ['Shotgun', 'Laser', 'Kebal', 'Gerak Cepat', 'Full HP'];
     for(let i=0; i<3; i++) {
         currentStageCardPool.push(pool[Math.floor(Math.random() * pool.length)]);
     }
     
-    document.getElementById('c0-txt').innerText = "KARTU 1";
-    document.getElementById('c1-txt').innerText = "KARTU 2";
-    document.getElementById('c2-txt').innerText = "KARTU 3";
+    document.getElementById('c0-txt').innerText = "?";
+    document.getElementById('c1-txt').innerText = "?";
+    document.getElementById('c2-txt').innerText = "?";
     document.getElementById('luck-popup').style.display = 'block';
 }
 
 window.pickLuckCard = function(index) {
     let bonusBuff = currentStageCardPool[index];
-    alert(`KAMU MEMILIH KARTU BERISI BUFF: ${bonusBuff.toUpperCase()}!`);
+    alert(`MISTERI TERUNGKAP!\nKamu Mendapatkan Buff: ${bonusBuff.toUpperCase()}!`);
     document.getElementById('luck-popup').style.display = 'none';
     confetti = [];
-    gameActive = true;
     
-    loadStage(currentStage + 1); // Masuk stage baru
-    executeBuffEffect(bonusBuff); // Pasang buff bonus keberuntungan langsung
+    loadStage(currentStage + 1); 
+    executeBuffEffect(bonusBuff); 
 }
 
 function checkCollisions() {
@@ -568,7 +658,7 @@ function checkCollisions() {
             let e = enemies[j];
             if (b.owner === player && rectIntersect(b.x, b.y, 4, 4, e.x, e.y, e.size, e.size)) {
                 if(!e.isBossShielded) {
-                    playSound('hit'); e.hp -= (player.buff === 'Laser' ? 25 : 18);
+                    playSound('hit'); e.hp -= (player.buff === 'Laser' ? 20 : 18); 
                     createExplosion(b.x, b.y, e.color);
                     if(e.hp <= 0) { createExplosion(e.x+e.size/2, e.y+e.size/2, '#fff'); enemies.splice(j, 1); }
                 }
@@ -585,8 +675,10 @@ function checkCollisions() {
     }
 }
 
+// ==========================================
+// 7. RENDER ENGINE & GAME LOOP
+// ==========================================
 function gameLoop() {
-    // Rendere Confetti selebrasi tetap berjalan saat game pause / menang
     if (gameActive || isGameFinished || !gameActive) {
         ctx.fillStyle = currentTheme.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
         
@@ -598,7 +690,7 @@ function gameLoop() {
             ctx.strokeStyle = currentTheme.stroke; ctx.lineWidth = 3; ctx.strokeRect(w.x+2, w.y+2, w.w-4, w.h-4);
         });
 
-        if (gameActive) {
+        if (gameActive && !isGameFinished) {
             player.update(); checkCollisions();
             enemies.forEach(e => e.update());
         }
@@ -611,8 +703,16 @@ function gameLoop() {
         }
 
         bullets.forEach(b => { 
-            ctx.fillStyle = b.ghost ? '#e040fb' : (b.owner.isPlayer ? '#00ffff' : '#ff3333'); 
-            ctx.fillRect(b.x-3, b.y-3, 6, 6); 
+            if(b.isLaserBolt) {
+                ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 4;
+                ctx.shadowBlur = 10; ctx.shadowColor = '#00ffff';
+                ctx.beginPath(); ctx.moveTo(b.x, b.y);
+                ctx.lineTo(b.x - b.vx * 1.5, b.y - b.vy * 1.5); ctx.stroke();
+                ctx.shadowBlur = 0; 
+            } else {
+                ctx.fillStyle = b.ghost ? '#e040fb' : (b.owner.isPlayer ? '#00ffff' : '#ff3333'); 
+                ctx.fillRect(b.x-3, b.y-3, 6, 6); 
+            }
         });
 
         let blink = Math.floor(Date.now() / 180) % 2 === 0;
@@ -634,7 +734,6 @@ function gameLoop() {
             ctx.fillText(iconText, box.x + box.size/2, box.y + box.size/2 + 1);
         });
 
-        // Update & Render Confetti
         for (let i = confetti.length - 1; i >= 0; i--) {
             let c = confetti[i]; c.x += c.vx; c.y += c.vy;
             ctx.fillStyle = c.color; ctx.fillRect(c.x, c.y, c.size, c.size);
@@ -644,6 +743,8 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
+// Init Database Soal dan Mulai Game
+initQuestions();
 loadStage(1);
 gameLoop();
 </script>
