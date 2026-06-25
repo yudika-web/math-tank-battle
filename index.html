@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Math Tank Battle - Tactical Buff Edition</title>
+    <title>Math Tank Battle - Ultimate Edition</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
@@ -11,9 +11,22 @@
             margin: 0; background-color: #0c0c14; color: #fff; 
             font-family: 'Press Start 2P', monospace; 
             overflow: hidden; touch-action: none;
-            display: flex; justify-content: center; align-items: center; height: 100vh;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh;
         }
         
+        #dashboard {
+            width: 800px; max-width: 100vw;
+            display: flex; justify-content: space-between; 
+            margin-bottom: 10px; box-sizing: border-box;
+            padding: 0 4px; pointer-events: none;
+        }
+        
+        .ui-box { 
+            background: #1a1a24; padding: 12px 16px; border: 3px solid #45455b; 
+            box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff; 
+            font-size: 10px; line-height: 1.6; min-width: 180px;
+        }
+
         #game-wrapper { position: relative; width: 800px; height: 600px; max-width: 100vw; max-height: 100vh; }
         
         canvas { 
@@ -22,28 +35,20 @@
             image-rendering: pixelated; box-shadow: 0 0 25px rgba(0,0,0,0.7);
         }
 
-        /* UI Status */
-        #ui { 
-            position: absolute; top: 15px; left: 15px; right: 15px; 
-            display: flex; justify-content: space-between; font-size: 10px; pointer-events: none;
-        }
-        .ui-box { 
-            background: #1a1a24; padding: 10px; border: 3px solid #45455b; 
-            box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff; line-height: 1.5;
-        }
-
-        /* Pop-up Soal Matematika */
-        #math-popup {
+        /* Pop-up Modals */
+        .modal {
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #1a1a24; border: 4px solid #f1c40f; padding: 25px; text-align: center;
-            box-shadow: 0 0 0 4px #000, 0 10px 20px rgba(0,0,0,0.5); z-index: 100; width: 85%; max-width: 420px;
+            box-shadow: 0 0 0 4px #000, 0 10px 20px rgba(0,0,0,0.5); z-index: 100; width: 85%; max-width: 440px;
         }
-        #math-popup h3 { color: #f1c40f; margin-top: 0; font-size: 11px; letter-spacing: 1px; }
+        .modal h3 { color: #f1c40f; margin-top: 0; font-size: 11px; letter-spacing: 1px; }
+        
         #math-ans { 
             font-family: 'Press Start 2P', monospace; width: 70%; padding: 12px; 
             margin: 15px 0; font-size: 16px; text-align: center; border: 4px solid #45455b; background: #000; color: #fff;
             outline: none;
         }
+        
         button { 
             font-family: 'Press Start 2P', monospace; background: #2ecc71; color: white; 
             border: 3px solid #27ae60; padding: 10px 20px; cursor: pointer; font-size: 10px;
@@ -51,7 +56,16 @@
         }
         button:active { transform: scale(0.95); }
 
-        /* Virtual Joysticks */
+        /* Luck Cards System Styles */
+        #cards-container { display: flex; justify-content: space-around; margin-top: 20px; }
+        .luck-card {
+            width: 90px; height: 130px; background: #2c3e50; border: 3px solid #bdc3c7;
+            box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff, 0 4px 8px rgba(0,0,0,0.5);
+            cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            font-size: 8px; font-weight: bold; padding: 5px; text-align: center; color: #fff;
+        }
+        .luck-card:hover { border-color: #f1c40f; transform: translateY(-5px); background: #34495e; }
+
         #controls { display: none; position: absolute; bottom: 20px; left: 20px; right: 20px; pointer-events: none; }
         .joy-zone { pointer-events: auto; width: 110px; height: 110px; background: rgba(0,0,0,0.4); border: 4px solid #45455b; border-radius: 50%; position: relative; }
         .joy-stick { width: 36px; height: 36px; background: #e74c3c; border: 3px solid #c0392b; border-radius: 50%; position: absolute; top: 34px; left: 34px; }
@@ -65,7 +79,7 @@
         }
         @media screen and (orientation: portrait) {
             #landscape-warning { display: flex; }
-            #game-wrapper { display: none; }
+            #game-wrapper, #dashboard { display: none; }
         }
     </style>
 </head>
@@ -75,15 +89,16 @@
         MOHON PUTAR HP ANDA<br>KE MODE LANDSCAPE (MENDATAR).
     </div>
 
+    <div id="dashboard">
+        <div class="ui-box">STAGE: <span id="stage-text">1</span><br>NYAWA: <span id="lives-text">3</span></div>
+        <div class="ui-box" id="boss-announce" style="color: #ff3333; display:none; text-align:center;">! AWAS BOSS !</div>
+        <div class="ui-box" style="color: #f1c40f; text-align: right;">BUFF AKTIF:<br><span id="buff-status">TIDAK ADA</span></div>
+    </div>
+
     <div id="game-wrapper">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         
-        <div id="ui">
-            <div class="ui-box">STAGE: <span id="stage-text">1</span><br>NYAWA: <span id="lives-text">3</span></div>
-            <div class="ui-box" style="color: #f1c40f;">BUFF AKTIF:<br><span id="buff-status">TIDAK ADA</span></div>
-        </div>
-
-        <div id="math-popup">
+        <div id="math-popup" class="modal">
             <h3>[ TANTANGAN MATEMATIKA ]</h3>
             <div id="math-q" style="margin-top: 15px; font-size: 11px; line-height: 1.6;">5 + 5 = ?</div>
             <input type="number" id="math-ans" autocomplete="off" pattern="[0-9]*">
@@ -91,9 +106,14 @@
             <button onclick="submitMath()">SUBMIT</button>
         </div>
 
-        <div id="controls">
-            <div id="joy-left-zone" class="joy-zone"><div id="joy-left-stick" class="joy-stick"></div></div>
-            <div id="joy-right-zone" class="joy-zone"><div id="joy-right-stick" class="joy-stick" style="background:#3498db; border-color:#2980b9;"></div></div>
+        <div id="luck-popup" class="modal" style="border-color: #2ecc71; max-width: 480px;">
+            <h3 style="color: #2ecc71;">[ STAGE CLEAR! ]</h3>
+            <p style="font-size: 9px; margin-top: 10px;">Pilih 1 Kartu Keberuntungan Untuk Stage Berikutnya:</p>
+            <div id="cards-container">
+                <div class="luck-card" onclick="pickLuckCard(0)"><span id="c0-txt">?</span></div>
+                <div class="luck-card" onclick="pickLuckCard(1)"><span id="c1-txt">?</span></div>
+                <div class="luck-card" onclick="pickLuckCard(2)"><span id="c2-txt">?</span></div>
+            </div>
         </div>
     </div>
 
@@ -103,6 +123,7 @@ const ctx = canvas.getContext('2d');
 const uiStage = document.getElementById('stage-text');
 const uiLives = document.getElementById('lives-text');
 const uiBuff = document.getElementById('buff-status');
+const bossAnnounce = document.getElementById('boss-announce');
 
 // --- RETRO AUDIO SINTESIS ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -132,36 +153,45 @@ function playSound(type) {
     }
 }
 
-// --- CONFIG ARENA & LEVEL ---
-const stages = [
-    { name: "Neon Base", bg: "#111625", wall: "#22314d", stroke: "#00ffff", map: [{x:160,y:120,w:80,h:200}, {x:560,y:280,w:80,h:200}, {x:360,y:240,w:100,h:100}] },
-    { name: "Lava Pits", bg: "#230303", wall: "#4a0e0e", stroke: "#ff5500", map: [{x:100,y:100,w:240,h:60}, {x:460,y:440,w:240,h:60}, {x:370,y:180,w:60,h:240}] },
-    { name: "Desert Gate", bg: "#3a2307", wall: "#6e420f", stroke: "#ffcc00", map: [{x:120,y:120,w:120,h:120}, {x:560,y:120,w:120,h:120}, {x:120,y:360,w:120,h:120}, {x:560,y:360,w:120,h:120}] },
-    { name: "Ice Castle", bg: "#1f2d3d", wall: "#3b526d", stroke: "#70a1ff", map: [{x:160,y:160,w:480,h:60}, {x:160,y:380,w:480,h:60}] }
+// --- CONFIG THEME ARENA ---
+const themes = [
+    { bg: "#111625", wall: "#22314d", stroke: "#00ffff" }, 
+    { bg: "#230303", wall: "#4a0e0e", stroke: "#ff5500" }, 
+    { bg: "#3a2307", wall: "#6e420f", stroke: "#ffcc00" }, 
+    { bg: "#1f2d3d", wall: "#3b526d", stroke: "#70a1ff" }, 
+    { bg: "#0d2012", wall: "#1b3d24", stroke: "#2ecc71" }  
 ];
 
-const buffList = ['Shotgun', 'Laser', 'Kebal', 'Gerak Cepat', 'Freeze AI', 'Extra Life', 'Full HP'];
+// List Buff Termasuk Bomb [BM] Baru
+const buffList = ['Shotgun', 'Laser', 'Kebal', 'Gerak Cepat', 'Freeze AI', 'Extra Life', 'Full HP', 'Bomb'];
 
-let currentStageIndex = 0;
+let currentStage = 1;
+let currentTheme = themes[0];
 let walls = [];
 let gameActive = true;
+let isGameFinished = false; // Flag untuk tamat
 const keys = {};
 
 let expectedMathAnswer = "";
 let pendingBuffBoxIndex = -1;
 let pendingBuffType = "";
+let currentStageCardPool = [];
 
-// State Virtual Joypad
 let joyL = { x: 0, y: 0, active: false };
 let joyR = { x: 0, y: 0, active: false };
-
 let particles = []; 
+let confetti = []; // Partikel selebrasi kemenangan
+let bullets = [];
+let buffBoxes = [];
+let enemies = [];
 
-// --- KEYBOARD HANDLING ---
-window.addEventListener('keydown', (e) => { keys[e.code] = true; });
+// --- INPUT HANDLING ---
+window.addEventListener('keydown', (e) => { 
+    if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) e.preventDefault();
+    keys[e.code] = true; 
+});
 window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
-// --- TOUCH DETECTION & JOYSTICK ---
 if('ontouchstart' in window || navigator.maxTouchPoints > 0) {
     document.getElementById('controls').style.display = 'flex';
     document.getElementById('controls').style.justifyContent = 'space-between';
@@ -174,129 +204,117 @@ if('ontouchstart' in window || navigator.maxTouchPoints > 0) {
             stickEl.style.transform = `translate(0px, 0px)`;
             joyState.active = false; joyState.x = 0; joyState.y = 0; return;
         }
-        let tx = touch.clientX - rect.left - 55;
-        let ty = touch.clientY - rect.top - 55;
-        let dist = Math.sqrt(tx*tx + ty*ty);
-        let maxDist = 35;
+        let tx = touch.clientX - rect.left - 55; let ty = touch.clientY - rect.top - 55;
+        let dist = Math.sqrt(tx*tx + ty*ty); let maxDist = 35;
         if(dist > maxDist) { tx = (tx/dist)*maxDist; ty = (ty/dist)*maxDist; }
-        
         stickEl.style.transform = `translate(${tx}px, ${ty}px)`;
         joyState.active = true; joyState.x = tx / maxDist; joyState.y = ty / maxDist;
     }
-
-    const leftZone = document.getElementById('joy-left-zone');
-    const rightZone = document.getElementById('joy-right-zone');
-    const leftStick = document.getElementById('joy-left-stick');
-    const rightStick = document.getElementById('joy-right-stick');
-
+    const leftZone = document.getElementById('joy-left-zone'), rightZone = document.getElementById('joy-right-zone');
+    const leftStick = document.getElementById('joy-left-stick'), rightStick = document.getElementById('joy-right-stick');
     leftZone.addEventListener('touchstart', (e) => handleJoystick(e, joyL, leftStick, false), {passive: false});
     leftZone.addEventListener('touchmove', (e) => handleJoystick(e, joyL, leftStick, false), {passive: false});
     leftZone.addEventListener('touchend', (e) => handleJoystick(e, joyL, leftStick, false));
-
     rightZone.addEventListener('touchstart', (e) => handleJoystick(e, joyR, rightStick, true), {passive: false});
     rightZone.addEventListener('touchmove', (e) => handleJoystick(e, joyR, rightStick, true), {passive: false});
     rightZone.addEventListener('touchend', (e) => handleJoystick(e, joyR, rightStick, true));
 }
 
-// --- VALIDASI POSISI AMAN (Anti Terjebak di Tembok) ---
 function rectIntersect(x1, y1, w1, h1, x2, y2, w2, h2) {
     return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2;
 }
 
+// --- GENERATOR MAZE (Skarang termasuk rintangan pilar di Stage Boss) ---
+function generateProceduralMaze() {
+    walls = [];
+    if(currentStage % 5 === 0) {
+        // Rintangan Khusus Stage Boss (2 Pilar Pelindung di tengah kanan-kiri)
+        walls.push({x: 240, y: 200, w: 60, h: 200});
+        walls.push({x: 500, y: 200, w: 60, h: 200});
+        return;
+    }
+    let seed = currentStage * 7;
+    let horizontalCount = 2 + (seed % 3);
+    for(let i = 0; i < horizontalCount; i++) {
+        let w = 100 + ((seed + i*20) % 150);
+        let h = 40;
+        let x = 150 + ((seed * (i+1)) % 400);
+        let y = 100 + (i * 130);
+        walls.push({x, y, w, h});
+    }
+}
+
 function getSafePosition(entitySize) {
-    let x, y;
-    let isSafe = false;
-    let safetyPadding = 18; 
-
+    let x, y, isSafe = false;
     while (!isSafe) {
-        x = Math.floor(Math.random() * (canvas.width - entitySize - 80)) + 40;
-        y = Math.floor(Math.random() * (canvas.height - entitySize - 80)) + 40;
-        
+        x = Math.floor(Math.random() * (canvas.width - entitySize - 100)) + 50;
+        y = Math.floor(Math.random() * (canvas.height - entitySize - 100)) + 50;
         isSafe = true;
-        // Cek tabrakan dengan semua rintangan dinding maze
         for (let w of walls) {
-            if (rectIntersect(x - safetyPadding, y - safetyPadding, entitySize + (safetyPadding*2), entitySize + (safetyPadding*2), w.x, w.y, w.w, w.h)) {
-                isSafe = false;
-                break;
-            }
+            if (rectIntersect(x - 15, y - 15, entitySize + 30, entitySize + 30, w.x, w.y, w.w, w.h)) { isSafe = false; break; }
         }
-        
-        // Cek agar tidak spawn menumpuk langsung di atas posisi awal player
-        if (rectIntersect(x, y, entitySize, entitySize, 20, 20, 120, 120)) {
-            isSafe = false;
-        }
-
-        // Cek agar tidak menumpuk di atas kotak buff yang sudah ada di arena saat ini
-        for (let box of buffBoxes) {
-            if (rectIntersect(x, y, entitySize, entitySize, box.x - 10, box.y - 10, box.size + 20, box.size + 20)) {
-                isSafe = false;
-            }
-        }
+        if (rectIntersect(x, y, entitySize, entitySize, 20, 20, 150, 150)) isSafe = false;
     }
     return { x, y };
 }
 
-// --- EFEK LEDAKAN PIXEL ---
 function createExplosion(x, y, color) {
-    for(let i=0; i<12; i++) {
+    for(let i=0; i<15; i++) {
         particles.push({
-            x: x, y: y,
-            vx: (Math.random() - 0.5) * 4,
-            vy: (Math.random() - 0.5) * 4,
-            size: Math.random() * 4 + 2,
-            life: 30,
-            color: color
+            x: x, y: y, vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5,
+            size: Math.random() * 4 + 2, life: 25, color: color
+        });
+    }
+}
+
+// --- SELEBRASI CONFETTI POP-UP ---
+function triggerConfetti() {
+    for (let i = 0; i < 100; i++) {
+        confetti.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * -canvas.height,
+            vx: (Math.random() - 0.5) * 3,
+            vy: Math.random() * 3 + 2,
+            size: Math.random() * 6 + 4,
+            color: `hsl(${Math.random() * 360}, 100%, 50%)`
         });
     }
 }
 
 // --- ENTITAS TANK ---
 class Tank {
-    constructor(x, y, color, isPlayer = false) {
-        this.x = x; this.y = y; this.size = 28; this.color = color;
-        this.isPlayer = isPlayer; this.speed = isPlayer ? 2.5 : 1.3;
+    constructor(x, y, color, isPlayer = false, isBoss = false, bossType = 0) {
+        this.x = x; this.y = y; this.color = color; this.isPlayer = isPlayer;
+        this.isBoss = isBoss; this.bossType = bossType;
+        
+        // REVISI: Ukuran musuh biasa disamakan dengan pemain (28 pixel)
+        this.size = isPlayer ? 28 : (isBoss ? 56 : 28);
+        this.speed = isPlayer ? 2.6 : (isBoss ? (bossType === 2 ? 2.2 : 1.0) : 1.3);
+        this.maxHp = isPlayer ? 100 : (isBoss ? 350 + (currentStage * 15) : 50);
+        this.hp = this.maxHp;
+        
         this.aimX = 1; this.aimY = 0; this.cooldown = 0;
-        this.maxHp = isPlayer ? 100 : 50; this.hp = this.maxHp;
         this.buff = null; this.buffTimer = 0; this.frozen = false;
+        this.bossTimer = 0; this.isBossShielded = false;
+        
         if(isPlayer) this.lives = 3; 
     }
 
     draw() {
-        // Nyawa (Health Bar Pixel)
-        ctx.fillStyle = '#551a1a'; ctx.fillRect(this.x, this.y - 12, this.size, 5);
-        ctx.fillStyle = '#2ecc71'; ctx.fillRect(this.x, this.y - 12, this.size * Math.max(0, this.hp / this.maxHp), 5);
-        ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(this.x, this.y - 12, this.size, 5);
+        ctx.fillStyle = '#551a1a'; ctx.fillRect(this.x, this.y - 14, this.size, 6);
+        ctx.fillStyle = this.isPlayer ? '#2ecc71' : '#ff3333'; 
+        ctx.fillRect(this.x, this.y - 14, this.size * Math.max(0, this.hp / this.maxHp), 6);
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(this.x, this.y - 14, this.size, 6);
 
-        // Badan Utama Tank
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x, this.y, this.size, this.size);
-        
-        ctx.fillStyle = 'rgba(0,0,0,0.25)';
-        ctx.fillRect(this.x, this.y + this.size - 6, this.size, 6);
-        ctx.fillRect(this.x + this.size - 6, this.y, 6, this.size);
+        ctx.fillStyle = this.color; ctx.fillRect(this.x, this.y, this.size, this.size);
+        ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(this.x, this.y + this.size - 6, this.size, 6);
 
-        // Tracks Roda
-        ctx.fillStyle = '#222';
-        if(Math.abs(this.aimX) > Math.abs(this.aimY)) {
-            ctx.fillRect(this.x, this.y - 4, this.size, 5);
-            ctx.fillRect(this.x, this.y + this.size - 1, this.size, 5);
-        } else {
-            ctx.fillRect(this.x - 4, this.y, 5, this.size);
-            ctx.fillRect(this.x + this.size - 1, this.y, 5, this.size);
-        }
+        ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = this.isBoss ? 10 : 5;
+        ctx.beginPath(); ctx.moveTo(this.x + this.size/2, this.y + this.size/2);
+        ctx.lineTo(this.x + this.size/2 + (this.aimX * (this.size*0.8)), this.y + this.size/2 + (this.aimY * (this.size*0.8))); ctx.stroke();
 
-        ctx.fillStyle = '#2c3e50';
-        ctx.fillRect(this.x + 6, this.y + 6, this.size - 12, this.size - 12);
-
-        // Moncong Meriam
-        ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = 6;
-        ctx.beginPath();
-        ctx.moveTo(this.x + this.size/2, this.y + this.size/2);
-        ctx.lineTo(this.x + this.size/2 + (this.aimX * 22), this.y + this.size/2 + (this.aimY * 22));
-        ctx.stroke();
-
-        if(this.buff === 'Kebal') {
-            ctx.strokeStyle = '#f1c40f'; ctx.lineWidth = 2;
+        if(this.buff === 'Kebal' || this.isBossShielded) {
+            ctx.strokeStyle = '#f1c40f'; ctx.lineWidth = 3;
             ctx.strokeRect(this.x - 6, this.y - 6, this.size + 12, this.size + 12);
         }
     }
@@ -309,7 +327,7 @@ class Tank {
 
     update() {
         if (this.frozen) return;
-        let spd = (this.buff === 'Gerak Cepat') ? this.speed * 1.6 : this.speed;
+        let spd = (this.buff === 'Gerak Cepat') ? this.speed * 1.5 : this.speed;
 
         if (this.isPlayer) {
             let dx = 0, dy = 0;
@@ -322,7 +340,6 @@ class Tank {
 
             if(keys['ArrowUp']) { this.aimX=0; this.aimY=-1; } else if(keys['ArrowDown']) { this.aimX=0; this.aimY=1; }
             if(keys['ArrowLeft']) { this.aimX=-1; this.aimY=0; } else if(keys['ArrowRight']) { this.aimX=1; this.aimY=0; }
-            
             if(joyR.active && (Math.abs(joyR.x) > 0.2 || Math.abs(joyR.y) > 0.2)) {
                 if(Math.abs(joyR.x) > Math.abs(joyR.y)) { this.aimX = joyR.x > 0 ? 1 : -1; this.aimY = 0; }
                 else { this.aimX = 0; this.aimY = joyR.y > 0 ? 1 : -1; }
@@ -330,73 +347,78 @@ class Tank {
 
             let joyFired = joyR.active && (Math.abs(joyR.x) > 0.7 || Math.abs(joyR.y) > 0.7);
             if ((keys['Space'] || joyFired) && this.cooldown <= 0) {
-                shoot(this); playSound('shoot');
-                this.cooldown = (this.buff === 'Laser') ? 10 : 28;
+                shoot(this); playSound('shoot'); this.cooldown = (this.buff === 'Laser') ? 10 : 25;
             }
         } else {
-            // AI Movement Patrolling & Hunting
             let dx = player.x - this.x; let dy = player.y - this.y;
             let mx = this.x + (dx > 0 ? spd : -spd); let my = this.y + (dy > 0 ? spd : -spd);
             
             if(Math.random() < 0.7) {
-                if(Math.abs(dx) > Math.abs(dy)) {
-                    if(this.tryMove(mx, this.y)) this.x = mx; else if(this.tryMove(this.x, my)) this.y = my;
-                } else {
-                    if(this.tryMove(this.x, my)) this.y = my; else if(this.tryMove(mx, this.y)) this.x = mx;
-                }
+                if(Math.abs(dx) > Math.abs(dy)) { if(this.tryMove(mx, this.y)) this.x = mx; } 
+                else { if(this.tryMove(this.x, my)) this.y = my; }
             }
-            
-            if(Math.abs(dx) > Math.abs(dy)) { this.aimX = dx > 0 ? 1 : -1; this.aimY = 0; }
-            else { this.aimX = 0; this.aimY = dy > 0 ? 1 : -1; }
-
             let dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist < 300 && Math.random() < 0.02 && this.cooldown <= 0) { shoot(this); playSound('shoot'); this.cooldown = 45; }
+            this.aimX = dx/dist; this.aimY = dy/dist;
+
+            if(this.isBoss) {
+                this.bossTimer++;
+                if(this.bossType === 3 && this.bossTimer % 200 === 0) shootLaserBeam(this);
+                if(this.bossType === 5) this.isBossShielded = (this.bossTimer % 300 > 180);
+                if(this.bossType === 6 && this.bossTimer % 250 === 0 && enemies.length < 4) {
+                    enemies.push(new Tank(this.x, this.y + 70, '#95a5a6')); 
+                }
+                if (this.cooldown <= 0) { bossShoot(this); this.cooldown = this.bossType === 1 ? 25 : 50; }
+            } else {
+                if (dist < 300 && Math.random() < 0.02 && this.cooldown <= 0) { shoot(this); playSound('shoot'); this.cooldown = 45; }
+            }
         }
 
         if (this.cooldown > 0) this.cooldown--;
-        if (this.buffTimer > 0) {
-            this.buffTimer--;
-            if (this.buffTimer <= 0) { this.buff = null; uiBuff.innerText = "TIDAK ADA"; uiBuff.style.color = "#fff"; }
-        }
+        if (this.buffTimer > 0) { this.buffTimer--; if (this.buffTimer <= 0) { this.buff = null; uiBuff.innerText = "TIDAK ADA"; } }
     }
 }
 
-let player = new Tank(50, 50, '#3498db', true);
-let enemies = [];
-let bullets = [];
-let buffBoxes = [];
-
-function loadStage(index) {
-    if(index >= stages.length) { alert("PRESTASI LUAR BIASA! KAMU MENANG!"); location.reload(); return; }
-    currentStageIndex = index;
-    let s = stages[index];
-    uiStage.innerText = `${index + 1} : ${s.name}`;
-    uiLives.innerText = player.lives;
-    walls = s.map;
-    
-    player.x = 50; player.y = 50; player.hp = player.maxHp;
-    bullets = []; particles = []; buffBoxes = [];
-    
-    // SPAWN 3 KOTAK BUFF SEKALIGUS SECARA AMAN
-    for(let i=0; i<3; i++) {
-        let safeBuffCoord = getSafePosition(22);
-        let randomType = buffList[Math.floor(Math.random() * buffList.length)];
-        buffBoxes.push({x: safeBuffCoord.x, y: safeBuffCoord.y, size: 22, type: randomType});
+function loadStage(stageNum) {
+    if(stageNum > 35) { 
+        isGameFinished = true;
+        gameActive = false;
+        triggerConfetti();
+        alert("LUAR BIASA! KAMU SELESAI MENAMATKAN SELURUH PERMAINAN!"); 
+        return; 
     }
+    currentStage = stageNum;
+    currentTheme = themes[(stageNum - 1) % themes.length];
     
-    // Spawn Musuh AI Berdasarkan Level (Maksimal 3)
-    let enemyColors = ['#e74c3c', '#e67e22', '#9b59b6'];
-    enemies = [];
-    let enemyCount = Math.min(index + 1, 3); 
-    for(let i=0; i<enemyCount; i++) {
-        let safeEnemyCoord = getSafePosition(24);
-        enemies.push(new Tank(safeEnemyCoord.x, safeEnemyCoord.y, enemyColors[i]));
+    uiStage.innerText = currentStage;
+    uiLives.innerText = player.lives;
+    
+    generateProceduralMaze();
+    player.x = 50; player.y = 50; player.hp = player.maxHp;
+    bullets = []; particles = []; buffBoxes = []; enemies = [];
+
+    if(currentStage % 5 === 0) {
+        bossAnnounce.style.display = 'block';
+        let bossType = currentStage / 5; 
+        enemies.push(new Tank(600, 400, '#8e44ad', false, true, bossType)); 
+    } else {
+        bossAnnounce.style.display = 'none';
+        let enemyCount = Math.min(1 + (currentStage % 3), 3);
+        let colors = ['#e74c3c', '#e67e22', '#e74c3c'];
+        for(let i=0; i<enemyCount; i++){
+            let coord = getSafePosition(28);
+            enemies.push(new Tank(coord.x, coord.y, colors[i]));
+        }
+    }
+
+    for(let i=0; i<3; i++) {
+        let c = getSafePosition(22);
+        let rBuff = buffList[Math.floor(Math.random() * buffList.length)];
+        buffBoxes.push({x: c.x, y: c.y, size: 22, type: rBuff});
     }
 }
 
 function shoot(tank) {
-    let speed = 6.5;
-    let bX = tank.x + tank.size/2; let bY = tank.y + tank.size/2;
+    let speed = 6.5; let bX = tank.x + tank.size/2; let bY = tank.y + tank.size/2;
     if(tank.buff === 'Shotgun') {
         bullets.push({x: bX, y: bY, vx: tank.aimX*speed + tank.aimY*2, vy: tank.aimY*speed + tank.aimX*2, owner: tank});
         bullets.push({x: bX, y: bY, vx: tank.aimX*speed, vy: tank.aimY*speed, owner: tank});
@@ -406,133 +428,156 @@ function shoot(tank) {
     }
 }
 
+function bossShoot(boss) {
+    let bX = boss.x + boss.size/2; let bY = boss.y + boss.size/2;
+    playSound('shoot');
+    if(boss.bossType === 1 || boss.bossType === 7) { 
+        for(let a = -2; a <= 2; a++) {
+            bullets.push({x: bX, y: bY, vx: boss.aimX*5 + boss.aimY*a, vy: boss.aimY*5 + boss.aimX*a, owner: boss, ghost: boss.bossType===7});
+        }
+    } else if(boss.bossType === 4) { 
+        bullets.push({x: bX, y: bY, vx: boss.aimX*6, vy: boss.aimY*6, owner: boss, ghost: true});
+    } else { 
+        bullets.push({x: bX, y: bY, vx: boss.aimX*5.5, vy: boss.aimY*5.5, owner: boss});
+    }
+}
+
+function shootLaserBeam(boss) {
+    let startX = boss.x + boss.size/2; let startY = boss.y + boss.size/2;
+    createExplosion(startX, startY, '#ff00ff');
+    if(rectIntersect(player.x, player.y, player.size, player.size, startX - 20, 0, 40, 600) ||
+       rectIntersect(player.x, player.y, player.size, player.size, 0, startY - 20, 800, 40)) {
+        if(player.buff !== 'Kebal') player.hp -= 35;
+    }
+}
+
 // --- SOAL MATEMATIKA SD-SMP ---
 function generateMath() {
     let type = Math.floor(Math.random() * 5);
-    if(type === 0) { 
-        let a = Math.floor(Math.random()*40)+15, b = Math.floor(Math.random()*40)+15; 
-        return {q:`BERAPA HASIL DARI:\n${a} + ${b} = ?`, a:a+b}; 
-    }
-    if(type === 1) { 
-        let a = Math.floor(Math.random()*9)+3, b = Math.floor(Math.random()*12)+3; 
-        return {q:`BERAPA HASIL DARI:\n${a} x ${b} = ?`, a:a*b}; 
-    }
-    if(type === 2) {
-        let r = Math.floor(Math.random()*6)+2;
-        return {q:`LUAS PERSEGI JIKA\nSISI = ${r} CM, ADALAH?`, a:r*r};
-    }
-    if(type === 3) {
-        let m = Math.floor(Math.random()*8)+2;
-        return {q:`KONVERSI SATUAN:\n${m} METER = ... CM?`, a:m*100};
-    }
-    let pembilang = Math.floor(Math.random()*3)+1;
-    return {q:`BENTUK DESIMAL DARI\nFRAKSI ${pembilang}/5 ADALAH?\n(Gunakan titik, cth: 0.2)`, a: (pembilang/5).toString()};
+    if(type === 0) { let a = Math.floor(Math.random()*50)+10, b = Math.floor(Math.random()*50)+10; return {q:`${a} + ${b} = ?`, a:a+b}; }
+    if(type === 1) { let a = Math.floor(Math.random()*9)+4, b = Math.floor(Math.random()*11)+3; return {q:`${a} x ${b} = ?`, a:a*b}; }
+    if(type === 2) { let r = Math.floor(Math.random()*7)+3; return {q:`LUAS PERSEGI DENGAN\nSISI = ${r} CM?`, a:r*r}; }
+    if(type === 3) { let m = Math.floor(Math.random()*12)+2; return {q:`${m} METER = ... CENTIMETER?`, a:m*100}; }
+    let p = Math.floor(Math.random()*3)+1; return {q:`DESIMAL FRAKSI DARI ${p}/5 = ?\n(Gunakan Titik, cth: 0.4)`, a:(p/5).toString()};
 }
 
 function triggerMathPopup(boxIndex) {
-    gameActive = false; 
-    pendingBuffBoxIndex = boxIndex;
-    pendingBuffType = buffBoxes[boxIndex].type; // Simpan tipe buff yang ditargetkan
-    
+    gameActive = false; pendingBuffBoxIndex = boxIndex; pendingBuffType = buffBoxes[boxIndex].type;
     let prob = generateMath(); expectedMathAnswer = prob.a.toString();
     document.getElementById('math-q').innerText = `BUFF TARGET: [${pendingBuffType.toUpperCase()}]\n\n` + prob.q;
-    document.getElementById('math-ans').value = "";
-    document.getElementById('math-popup').style.display = 'block';
-    document.getElementById('math-ans').focus();
+    document.getElementById('math-ans').value = ""; document.getElementById('math-popup').style.display = 'block'; document.getElementById('math-ans').focus();
     joyL.active = false; joyR.active = false;
+}
+
+function executeBuffEffect(type) {
+    if(type === 'Extra Life') { 
+        player.lives++; uiLives.innerText = player.lives; 
+    } else if(type === 'Full HP') { 
+        player.hp = player.maxHp; 
+    } else if(type === 'Bomb') {
+        // REVISI: Efek BUFF BOMB baru
+        playSound('hit');
+        for(let j = enemies.length - 1; j >= 0; j--) {
+            let e = enemies[j];
+            if(e.isBoss) {
+                e.hp -= (e.maxHp / 2); // Kurangi Setengah Bar HP Boss
+                createExplosion(e.x + e.size/2, e.y + e.size/2, '#ff3333');
+                if(e.hp <= 0) enemies.splice(j, 1);
+            } else {
+                createExplosion(e.x + e.size/2, e.y + e.size/2, '#ff5500');
+                enemies.splice(j, 1); // Meledakkan seluruh musuh biasa
+            }
+        }
+        if(enemies.length === 0) { triggerStageClear(); }
+    } else {
+        player.buff = type; player.buffTimer = 550; uiBuff.innerText = type.toUpperCase();
+        if(type === 'Freeze AI') { enemies.forEach(e => e.frozen = true); setTimeout(()=>enemies.forEach(e => e.frozen=false), 5000); }
+    }
 }
 
 window.submitMath = function() {
     let ans = document.getElementById('math-ans').value.trim();
     if(ans === expectedMathAnswer) {
         playSound('buff');
-        
-        // Eksekusi Efek Berdasarkan Jenis Buff
-        if(pendingBuffType === 'Extra Life') {
-            player.lives++;
-            uiLives.innerText = player.lives;
-            uiBuff.innerText = "+1 NYAWA!"; uiBuff.style.color = "#2ecc71";
-        } else if(pendingBuffType === 'Full HP') {
-            player.hp = player.maxHp;
-            uiBuff.innerText = HP_RESTORED = "HP PENUH!"; uiBuff.style.color = "#ff4d4d";
-        } else {
-            player.buff = pendingBuffType; 
-            player.buffTimer = 550; 
-            uiBuff.innerText = pendingBuffType.toUpperCase(); uiBuff.style.color = "#2ecc71";
-            
-            if(pendingBuffType === 'Freeze AI') { 
-                enemies.forEach(e => e.frozen = true); 
-                setTimeout(()=>enemies.forEach(e => e.frozen=false), 5000); 
-            }
-        }
-    } else {
-        playSound('wrong');
-        alert(`SALAH! JAWABAN YANG BENAR: ${expectedMathAnswer}`);
-    }
+        executeBuffEffect(pendingBuffType);
+    } else { playSound('wrong'); alert(`SALAH! JAWABAN BENAR: ${expectedMathAnswer}`); }
     
     document.getElementById('math-popup').style.display = 'none';
     if(pendingBuffBoxIndex > -1) buffBoxes.splice(pendingBuffBoxIndex, 1);
     pendingBuffBoxIndex = -1; gameActive = true;
     
-    // Isi kembali slot buff kosong setelah delay waktu agar tetap berjumlah 3 di arena
     setTimeout(() => { 
-        if(buffBoxes.length < 3) {
-            let nextCoord = getSafePosition(22);
-            let randomType = buffList[Math.floor(Math.random() * buffList.length)];
-            buffBoxes.push({x: nextCoord.x, y: nextCoord.y, size: 22, type: randomType}); 
+        if(buffBoxes.length < 3 && gameActive) {
+            let c = getSafePosition(22); let rBuff = buffList[Math.floor(Math.random() * buffList.length)];
+            buffBoxes.push({x: c.x, y: c.y, size: 22, type: rBuff}); 
         }
     }, 8000);
+}
+
+// --- SISTEM KARTU LUCK (KEBERUNTUNGAN) ---
+function triggerStageClear() {
+    gameActive = false;
+    triggerConfetti(); // Pop-up Confetti kemenangan stage
+    
+    // Siapkan 3 Kartu Keberuntungan Acak
+    currentStageCardPool = [];
+    const pool = ['Shotgun', 'Laser', 'Kebal', 'Gerak Cepat', 'Full HP'];
+    for(let i=0; i<3; i++) {
+        currentStageCardPool.push(pool[Math.floor(Math.random() * pool.length)]);
+    }
+    
+    document.getElementById('c0-txt').innerText = "KARTU 1";
+    document.getElementById('c1-txt').innerText = "KARTU 2";
+    document.getElementById('c2-txt').innerText = "KARTU 3";
+    document.getElementById('luck-popup').style.display = 'block';
+}
+
+window.pickLuckCard = function(index) {
+    let bonusBuff = currentStageCardPool[index];
+    alert(`KAMU MEMILIH KARTU BERISI BUFF: ${bonusBuff.toUpperCase()}!`);
+    document.getElementById('luck-popup').style.display = 'none';
+    confetti = [];
+    gameActive = true;
+    
+    loadStage(currentStage + 1); // Masuk stage baru
+    executeBuffEffect(bonusBuff); // Pasang buff bonus keberuntungan langsung
 }
 
 function checkCollisions() {
     for (let i = bullets.length - 1; i >= 0; i--) {
         let b = bullets[i]; b.x += b.vx; b.y += b.vy;
-        
         let hitWall = false;
-        for (let w of walls) { if (rectIntersect(b.x, b.y, 4, 4, w.x, w.y, w.w, w.h)) { hitWall = true; break; } }
+        if(!b.ghost) { 
+            for (let w of walls) { if (rectIntersect(b.x, b.y, 4, 4, w.x, w.y, w.w, w.h)) { hitWall = true; break; } }
+        }
         if (hitWall || b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) { bullets.splice(i, 1); continue; }
 
-        // Kena Player Utama
         if (b.owner !== player && rectIntersect(b.x, b.y, 4, 4, player.x, player.y, player.size, player.size)) {
             if (player.buff !== 'Kebal') {
-                playSound('hit'); player.hp -= 15;
+                playSound('hit'); player.hp -= b.owner.isBoss ? 20 : 15;
                 createExplosion(player.x+14, player.y+14, '#3498db');
-                
-                // Mekanik Sisa Nyawa (Lives Counter)
                 if (player.hp <= 0) {
-                    player.lives--;
-                    uiLives.innerText = player.lives;
-                    if(player.lives <= 0) {
-                        alert("GAME OVER! NYAWA KAMU HABIS."); 
-                        location.reload();
-                    } else {
-                        player.hp = player.maxHp; // Reset darah karena masih ada sisa nyawa
-                        alert("KAMU HANCUR! KEHILANGAN 1 NYAWA.");
-                    }
+                    player.lives--; uiLives.innerText = player.lives;
+                    if(player.lives <= 0) { alert("GAME OVER!"); location.reload(); } else { player.hp = player.maxHp; }
                 }
             }
             bullets.splice(i, 1); continue;
         }
 
-        // Kena Musuh AI
         for (let j = enemies.length - 1; j >= 0; j--) {
             let e = enemies[j];
             if (b.owner === player && rectIntersect(b.x, b.y, 4, 4, e.x, e.y, e.size, e.size)) {
-                playSound('hit'); e.hp -= (player.buff === 'Laser' ? 25 : 18); 
-                createExplosion(e.x+12, e.y+12, e.color);
-                bullets.splice(i, 1);
-                
-                if(e.hp <= 0) {
-                    createExplosion(e.x+12, e.y+12, '#fff');
-                    enemies.splice(j, 1);
-                    if (enemies.length === 0) { setTimeout(() => loadStage(currentStageIndex + 1), 800); }
+                if(!e.isBossShielded) {
+                    playSound('hit'); e.hp -= (player.buff === 'Laser' ? 25 : 18);
+                    createExplosion(b.x, b.y, e.color);
+                    if(e.hp <= 0) { createExplosion(e.x+e.size/2, e.y+e.size/2, '#fff'); enemies.splice(j, 1); }
                 }
+                bullets.splice(i, 1);
+                if (enemies.length === 0) { setTimeout(() => { triggerStageClear(); }, 400); }
                 break;
             }
         }
     }
-
-    // Ambil Kotak Buff
     for (let i = buffBoxes.length - 1; i >= 0; i--) {
         if (rectIntersect(player.x, player.y, player.size, player.size, buffBoxes[i].x, buffBoxes[i].y, buffBoxes[i].size, buffBoxes[i].size)) {
             triggerMathPopup(i); break;
@@ -540,80 +585,66 @@ function checkCollisions() {
     }
 }
 
-// --- ENGINE RENDER CORE ---
 function gameLoop() {
-    if (gameActive) {
-        let s = stages[currentStageIndex];
-        ctx.fillStyle = s.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Grid Lantai Halus
-        ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1;
+    // Rendere Confetti selebrasi tetap berjalan saat game pause / menang
+    if (gameActive || isGameFinished || !gameActive) {
+        ctx.fillStyle = currentTheme.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.strokeStyle = 'rgba(255,255,255,0.02)'; ctx.lineWidth = 1;
         for(let i=0; i<800; i+=32) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,600); ctx.stroke(); }
-        for(let i=0; i<600; i+=32) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(800,i); ctx.stroke(); }
 
-        // Rintangan Dinding Maze
         walls.forEach(w => {
-            ctx.fillStyle = s.wall; ctx.fillRect(w.x, w.y, w.w, w.h);
-            ctx.strokeStyle = s.stroke; ctx.lineWidth = 3; ctx.strokeRect(w.x+2, w.y+2, w.w-4, w.h-4);
-            ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.fillRect(w.x+4, w.y+w.h-8, w.w-8, 4);
+            ctx.fillStyle = currentTheme.wall; ctx.fillRect(w.x, w.y, w.w, w.h);
+            ctx.strokeStyle = currentTheme.stroke; ctx.lineWidth = 3; ctx.strokeRect(w.x+2, w.y+2, w.w-4, w.h-4);
         });
 
-        player.update(); player.draw();
-        enemies.forEach(e => { e.update(); e.draw(); });
-        checkCollisions();
-
-        // Update Partikel Serpihan Ledakan
-        for (let i = particles.length - 1; i >= 0; i--) {
-            let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life--;
-            ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
-            if(p.life <= 0) particles.splice(i, 1);
+        if (gameActive) {
+            player.update(); checkCollisions();
+            enemies.forEach(e => e.update());
         }
 
-        // Peluru Kotak Klasik
-        bullets.forEach(b => {
-            ctx.fillStyle = b.owner.isPlayer ? '#00ffff' : '#ff3333';
-            ctx.fillRect(b.x-3, b.y-3, 6, 6);
+        player.draw(); 
+        enemies.forEach(e => e.draw());
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life--; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); if(p.life <= 0) particles.splice(i, 1);
+        }
+
+        bullets.forEach(b => { 
+            ctx.fillStyle = b.ghost ? '#e040fb' : (b.owner.isPlayer ? '#00ffff' : '#ff3333'); 
+            ctx.fillRect(b.x-3, b.y-3, 6, 6); 
         });
 
-        // DRAW KOTAK BUFF DENGAN WARNA & IKON PIXEL SPESIFIK
         let blink = Math.floor(Date.now() / 180) % 2 === 0;
         buffBoxes.forEach(box => {
-            let boxColor = '#fff';
-            let iconText = '?';
-            let textColor = '#000';
-            
-            // Konfigurasi Visual Sesuai Tipe Buff
+            let boxColor = '#fff'; let iconText = '?';
             switch(box.type) {
                 case 'Shotgun': boxColor = '#e67e22'; iconText = 'SG'; break;
                 case 'Laser': boxColor = '#00ffff'; iconText = 'LZ'; break;
                 case 'Kebal': boxColor = '#f1c40f'; iconText = 'KB'; break;
                 case 'Gerak Cepat': boxColor = '#9b59b6'; iconText = 'SP'; break;
                 case 'Freeze AI': boxColor = '#3498db'; iconText = 'FZ'; break;
-                case 'Extra Life': boxColor = '#2ecc71'; iconText = '+1'; textColor = '#fff'; break;
-                case 'Full HP': boxColor = '#e74c3c'; iconText = 'HP'; textColor = '#fff'; break;
+                case 'Extra Life': boxColor = '#2ecc71'; iconText = '+1'; break;
+                case 'Full HP': boxColor = '#e74c3c'; iconText = 'HP'; break;
+                case 'Bomb': boxColor = '#95a5a6'; iconText = 'BM'; break;
             }
-            
-            // Efek berkedip khusus retro pada kotak
-            ctx.fillStyle = blink ? boxColor : 'rgba(255,255,255,0.9)';
-            ctx.fillRect(box.x, box.y, box.size, box.size);
-            ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(box.x, box.y, box.size, box.size);
-            
-            // Inner border bergaya kaset game lama
-            ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.strokeRect(box.x+2, box.y+2, box.size-4, box.size-4);
-            
-            // Render Teks Di Tengah Kotak
-            ctx.fillStyle = blink ? textColor : '#000';
-            ctx.font = "bold 9px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
+            ctx.fillStyle = blink ? boxColor : '#fff'; ctx.fillRect(box.x, box.y, box.size, box.size);
+            ctx.strokeStyle = '#000'; ctx.strokeRect(box.x, box.y, box.size, box.size);
+            ctx.fillStyle = '#000'; ctx.font = "bold 9px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
             ctx.fillText(iconText, box.x + box.size/2, box.y + box.size/2 + 1);
         });
+
+        // Update & Render Confetti
+        for (let i = confetti.length - 1; i >= 0; i--) {
+            let c = confetti[i]; c.x += c.vx; c.y += c.vy;
+            ctx.fillStyle = c.color; ctx.fillRect(c.x, c.y, c.size, c.size);
+            if(c.y > canvas.height) confetti.splice(i, 1);
+        }
     }
     requestAnimationFrame(gameLoop);
 }
 
-// Mulai Permainan
-loadStage(0);
+loadStage(1);
 gameLoop();
 </script>
 </body>
